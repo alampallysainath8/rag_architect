@@ -6,7 +6,7 @@ Uses integrated embedding, so we search with raw text (no manual embedding neede
 from typing import List, Dict
 from pinecone import Pinecone
 
-from config import (
+from app.config import (
     PINECONE_API_KEY,
     PINECONE_INDEX_NAME,
     PINECONE_NAMESPACE,

@@ -7,7 +7,7 @@ import re
 from typing import List, Dict
 from pypdf import PdfReader
 
-from config import CHUNK_SIZE, CHUNK_OVERLAP
+from app.config import CHUNK_SIZE, CHUNK_OVERLAP
 
 
 # ── Text Extraction ──────────────────────────────────────────────────────────

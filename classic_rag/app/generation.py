@@ -1,20 +1,23 @@
 """
 Generation module — sends the retrieved context + user query to an LLM
 and returns the final answer.
-Uses LangChain's ChatOpenAI for LLM interaction.
+Uses Groq LLM (ChatGroq) for LLM interaction when available.
 """
 
 from typing import List, Dict
-from langchain_openai import ChatOpenAI
 
-from config import OPENAI_API_KEY, OPENAI_MODEL, MAX_TOKENS, TEMPERATURE
+from langchain_groq import ChatGroq  # type: ignore
 
-_llm = ChatOpenAI(
-    model=OPENAI_MODEL,
-    api_key=OPENAI_API_KEY,
+from app.config import GROQ_API_KEY, GROQ_MODEL, MAX_TOKENS, TEMPERATURE
+
+
+_llm = ChatGroq(
+    model=GROQ_MODEL,
+    api_key=GROQ_API_KEY,
     max_tokens=MAX_TOKENS,
     temperature=TEMPERATURE,
 )
+
 
 SYSTEM_PROMPT = """You are a helpful assistant that answers questions based on the provided context.
 Use ONLY the context below to answer. If the answer is not in the context, say "I don't have enough information to answer that."
@@ -47,7 +50,7 @@ def build_context_block(chunks: List[Dict]) -> str:
 
 def generate_answer(query: str, chunks: List[Dict]) -> str:
     """
-    Generate an answer with inline citations using LangChain ChatOpenAI.
+    Generate an answer with inline citations using Groq ChatGroq.
     """
     context = build_context_block(chunks)
 
@@ -61,8 +64,7 @@ def generate_answer(query: str, chunks: List[Dict]) -> str:
 
 
 if __name__ == "__main__":
-    print("=== Generation Test (LangChain) ===")
-    print(f"   Using: ChatOpenAI(model={OPENAI_MODEL})")
+    print("=== Generation Test ===")
 
     # Test with dummy context
     test_chunks = [
