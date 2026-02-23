@@ -1,0 +1,22 @@
+# Enhanced Classic RAG - Requirements
+
+# Core Framework
+fastapi>=0.129.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.12.5
+python-dotenv>=1.2.1
+
+# LangChain and AI Models
+langchain-groq>=1.1.2
+
+# Vector Database
+pinecone>=8.0.1
+
+# Document Processing
+pymupdf>=1.24.0  # PyMuPDF for advanced PDF processing with table extraction
+
+# Database
+# sqlite3 is built into Python
+
+# Utilities
+requests>=2.32.5
