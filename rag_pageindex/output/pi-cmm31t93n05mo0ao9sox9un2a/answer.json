@@ -1,0 +1,4 @@
+{
+  "query": "what is the encoder?",
+  "answer": "The encoder is a component of the model architecture that maps an input sequence of symbol representations to a sequence of continuous representations. It is composed of a stack of 6 identical layers, each with two sub-layers: a multi-head self-attention mechanism and a fully connected feed-forward network."
+}
