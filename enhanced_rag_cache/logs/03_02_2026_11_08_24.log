@@ -1,0 +1,3 @@
+2026-03-02 11:08:25,738 | INFO     | src.utils.pdf_to_markdown | Converting PDF → Markdown: 2602.03442v1_rag_pdf-1-9.pdf  (embed_images=False)
+2026-03-02 11:08:50,663 | INFO     | src.utils.pdf_to_markdown | Converted 2602.03442v1_rag_pdf-1-9.pdf — 38,594 chars of Markdown
+2026-03-02 11:08:50,670 | INFO     | src.chunking.structure_recursive | structure_recursive_chunk: doc='test.pdf' → 18 chunks (text=9, table=9, image=0)

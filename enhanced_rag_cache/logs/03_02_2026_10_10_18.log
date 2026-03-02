@@ -1,0 +1,2 @@
+2026-03-02 10:10:18,769 | INFO     | src.chunking.structure_recursive | structure_recursive_chunk: doc='sample.md' → 3 chunks (text=1, table=1, image=1)
+2026-03-02 10:10:18,770 | INFO     | src.chunking.parent_child | Parent-Child chunking: doc='doc.txt' → 1 parents, 1 children

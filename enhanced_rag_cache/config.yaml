@@ -1,0 +1,93 @@
+# ════════════════════════════════════════════════════════════════════════════
+# Enhanced RAG Cache — Central Configuration
+# All tunable parameters live here. Environment secrets go in .env
+# ════════════════════════════════════════════════════════════════════════════
+
+# ── Pinecone ─────────────────────────────────────────────────────────────────
+pinecone:
+  index_name: "rag-cache-v2"
+  cloud: "aws"
+  region: "us-east-1"
+  embed_model: "multilingual-e5-large"   # server-side embedding for child chunks
+  rerank_model: "bge-reranker-v2-m3"
+  namespace: "documents"
+  batch_size: 96
+
+# ── OpenAI ───────────────────────────────────────────────────────────────────
+openai:
+  llm_model: "gpt-4o-mini"
+  embedding_model: "text-embedding-3-small"  # used for semantic/retrieval cache
+  embedding_dim: 1536
+  max_tokens: 1024
+  temperature: 0.2
+# ── Ingestion ────────────────────────────────────────────────────────────────
+ingestion:
+  # Default chunking strategy used when none is specified in the API request.
+  # Options: "parent_child" | "structure_recursive" | "pdf_rich"
+  default_strategy: "structure_recursive"
+# ── Chunking ─────────────────────────────────────────────────────────────────
+chunking:
+  # Strategy 1 — Parent-Child
+  parent_child:
+    parent_chunk_size: 1500
+    parent_overlap: 100
+    child_chunk_size: 300
+    child_overlap: 50
+
+  # Strategy 2 — Structure-Aware + Recursive fallback
+  structure_recursive:
+    max_section_size: 1200        # chars; sections larger than this get recursive-split
+    recursive_chunk_size: 600
+    recursive_overlap: 80
+    headers_to_split:             # Markdown header levels to split on
+      - ["##", "h2"]
+      - ["###", "h3"]
+
+# ── Retrieval ────────────────────────────────────────────────────────────────
+retrieval:
+  top_k: 10          # candidates fetched from Pinecone
+  rerank_top_n: 5   # results kept after reranking
+
+# ── Caching ───────────────────────────────────────────────────────────────────
+cache:
+  # Backend: "redis" (production) or "sqlite" (dev/fallback)
+  # Override via CACHE_BACKEND env var
+  backend: "sqlite"
+  enabled: true
+
+  # SQLite path (used when backend = "sqlite")
+  # Override via DATABASE_PATH env var
+  database_path: "data/rag_cache.db"
+
+  # Tier 1 — Exact cache
+  exact:
+    ttl_seconds: 604800           # 7 days
+
+  # Tier 2 — Semantic cache
+  semantic:
+    similarity_threshold: 0.92   # cosine similarity threshold for a hit
+    ttl_seconds: 604800           # 7 days
+
+  # Tier 3 — Retrieval cache
+  retrieval:
+    similarity_threshold: 0.85   # lower threshold — reuse chunks, still call LLM
+    ttl_seconds: 86400            # 1 day
+
+  # Parent chunk cache (used by parent-child strategy)
+  parent:
+    ttl_seconds: 604800           # 7 days — parents are static per document
+
+# ── Redis ────────────────────────────────────────────────────────────────────
+redis:
+  # Full URL — override via REDIS_URL env var
+  url: "redis://localhost:6379/0"
+  # Legacy host/port fields (used only to build url if REDIS_URL not set)
+  host: "localhost"
+  port: 6379
+  db: 0
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level: "INFO"
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+  file: "logs/rag_cache.log"     # set to "" to disable file logging

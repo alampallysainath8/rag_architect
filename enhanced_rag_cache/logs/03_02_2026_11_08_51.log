@@ -1,0 +1,12 @@
+2026-03-02 11:08:52,011 | INFO     | src.utils.pdf_to_markdown | Converting PDF → Markdown: 2602.03442v1_rag_pdf-1-9.pdf  (embed_images=True)
+2026-03-02 11:09:21,844 | INFO     | src.utils.pdf_to_markdown | Converted 2602.03442v1_rag_pdf-1-9.pdf — 606,314 chars of Markdown
+2026-03-02 11:09:21,844 | INFO     | src.utils.image_enricher | Enriching 4 image(s)…
+2026-03-02 11:09:21,844 | INFO     | src.utils.image_enricher |   Processing image 1/4
+2026-03-02 11:09:23,777 | INFO     | src.utils.image_enricher |   Image 1 ✓ (table=yes, json=yes)
+2026-03-02 11:09:23,785 | INFO     | src.utils.image_enricher |   Processing image 2/4
+2026-03-02 11:09:24,447 | INFO     | src.utils.image_enricher |   Image 2 ✓ (table=no, json=no)
+2026-03-02 11:09:24,447 | INFO     | src.utils.image_enricher |   Processing image 3/4
+2026-03-02 11:09:25,060 | INFO     | src.utils.image_enricher |   Image 3 ✓ (table=no, json=no)
+2026-03-02 11:09:25,060 | INFO     | src.utils.image_enricher |   Processing image 4/4
+2026-03-02 11:09:25,627 | INFO     | src.utils.image_enricher |   Image 4 ✓ (table=no, json=yes)
+2026-03-02 11:09:25,635 | INFO     | src.chunking.structure_recursive | structure_recursive_chunk: doc='2602.03442v1_rag_pdf-1-9.pdf' → 27 chunks (text=13, table=10, image=4)

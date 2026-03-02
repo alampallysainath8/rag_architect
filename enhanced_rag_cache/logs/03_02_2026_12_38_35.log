@@ -1,0 +1,118 @@
+2026-03-02 12:40:33,808 | INFO     | src.caching.sqlite_backend | SQLite cache backend initialised at 'data/rag_cache.db'
+2026-03-02 12:40:33,816 | INFO     | src.ingestion | Starting ingestion: doc='2501.17703v2.pdf', strategy='structure_recursive'
+2026-03-02 12:40:33,816 | INFO     | src.ingestion | [PDF] Step 1/3 — Converting with embedded images: 2501.17703v2.pdf
+2026-03-02 12:40:33,982 | INFO     | src.utils.pdf_to_markdown | Converting PDF → Markdown: 2501.17703v2.pdf  (embed_images=True)
+2026-03-02 12:40:39,294 | INFO     | src.utils.pdf_to_markdown | Converted 2501.17703v2.pdf — 73,367 chars of Markdown
+2026-03-02 12:40:39,295 | INFO     | src.ingestion | [PDF] Raw markdown: 73,367 chars
+2026-03-02 12:40:39,296 | INFO     | src.ingestion | [PDF] Step 2/3 — Image enrichment via Groq vision
+2026-03-02 12:40:39,296 | INFO     | src.utils.image_enricher | No base64 images found — skipping enrichment.
+2026-03-02 12:40:39,297 | INFO     | src.ingestion | [PDF] Enriched markdown: 73,367 chars, 0 image(s)
+2026-03-02 12:40:39,304 | INFO     | src.chunking.structure_recursive | structure_recursive_chunk: doc='2501.17703v2.pdf' → 147 chunks (text=117, table=30, image=0)
+2026-03-02 12:40:40,898 | INFO     | src.retrieval.pinecone_manager | Creating Pinecone index 'rag-cache-v2' with integrated embedding …
+2026-03-02 12:40:43,742 | INFO     | src.retrieval.pinecone_manager | Waiting for index to become ready …
+2026-03-02 12:40:44,364 | INFO     | src.retrieval.pinecone_manager | Index 'rag-cache-v2' is ready.
+2026-03-02 12:40:49,325 | INFO     | src.retrieval.pinecone_manager | Pinecone upsert complete: 147 records in namespace 'sai'
+2026-03-02 12:40:49,325 | INFO     | src.ingestion | Ingestion complete (structure_recursive): doc='2501.17703v2.pdf' chunks=147 (text=117, table=30, image=0), upserted=147
+2026-03-02 12:40:49,364 | INFO     | src.caching.sqlite_backend | Doc version bumped to 1
+2026-03-02 12:40:49,364 | INFO     | api | Doc version bumped after upload: 2501.17703v2.pdf
+2026-03-02 12:47:51,054 | ERROR    | api | Chat pipeline error
+Traceback (most recent call last):
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpcore\_sync\connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpcore\_sync\http11.py", line 86, in handle_request
+    self._send_request_headers(**kwargs)
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpcore\_sync\http11.py", line 144, in _send_request_headers
+    with map_exceptions({h11.LocalProtocolError: LocalProtocolError}):
+  File "C:\Users\z036635\AppData\Roaming\uv\python\cpython-3.11.6-windows-x86_64-none\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.LocalProtocolError: Illegal header value b'Bearer '
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 1009, in _request
+    response = self._client.send(
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Users\z036635\AppData\Roaming\uv\python\cpython-3.11.6-windows-x86_64-none\Lib\contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.LocalProtocolError: Illegal header value b'Bearer '
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\api.py", line 215, in chat
+    result = run_query(
+             ^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\src\pipeline.py", line 65, in run_query
+    cache_result = _cache.lookup(query, source_filter=source_filter)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\src\caching\cache_manager.py", line 106, in lookup
+    embedding = embed_query(query)
+                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\src\utils\embeddings.py", line 56, in embed_query
+    return _get_embedder().embed_query(text)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\langchain_openai\embeddings\base.py", line 629, in embed_query
+    return self.embed_documents([text])[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\langchain_openai\embeddings\base.py", line 588, in embed_documents
+    return self._get_len_safe_embeddings(texts, engine=engine)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\langchain_openai\embeddings\base.py", line 483, in _get_len_safe_embeddings
+    response = self.client.create(
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\resources\embeddings.py", line 128, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 1296, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 973, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 1033, in _request
+    return self._retry_request(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 1111, in _retry_request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 1033, in _request
+    return self._retry_request(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 1111, in _retry_request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\z036635\Desktop\lang_proj\rag_architect\enhanced_rag_cache\.venv\Lib\site-packages\openai\_base_client.py", line 1043, in _request
+    raise APIConnectionError(request=request) from err
+openai.APIConnectionError: Connection error.

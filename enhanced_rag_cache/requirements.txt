@@ -1,0 +1,42 @@
+# ════════════════════════════════════════════════════════════════════════
+# requirements.txt — Enhanced RAG Cache
+# ════════════════════════════════════════════════════════════════════════
+
+# Core framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+#pydantic==2.10.4
+
+# Vector DB
+pinecone==6.0.2
+
+# LLM / Embeddings
+openai==1.65.1
+langchain-openai>=0.2.0          # OpenAIEmbeddings for semantic/retrieval cache
+
+# Document processing
+pypdf==5.1.0
+pymupdf4llm==0.0.17        # PDF → Markdown conversion
+
+# Text splitting / chunking
+langchain-text-splitters==0.3.6
+langchain-core>=0.3.0
+
+# File upload support (FastAPI multipart)
+python-multipart==0.0.20
+
+# Caching
+redis==5.2.1
+
+# Config
+pyyaml==6.0.2
+python-dotenv==1.0.1
+
+# HTTP Client (for frontend → API)
+requests==2.32.3
+
+# Frontend
+streamlit==1.41.1
+
+# Utilities
+numpy==2.2.3

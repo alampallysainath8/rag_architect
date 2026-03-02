@@ -1,0 +1,2 @@
+2026-03-02 10:22:15,326 | INFO     | src.utils.pdf_to_markdown | Converting PDF → Markdown: 2602.03442v1_rag_pdf-1-9.pdf  (embed_images=False)
+2026-03-02 10:22:17,915 | INFO     | src.utils.pdf_to_markdown | Converted 2602.03442v1_rag_pdf-1-9.pdf — 29,691 chars of Markdown

@@ -1,0 +1,4 @@
+2026-03-02 10:54:56,760 | INFO     | src.utils.pdf_to_markdown | Converting PDF → Markdown: 2501.17703v2.pdf  (embed_images=True)
+2026-03-02 10:55:00,495 | INFO     | src.utils.pdf_to_markdown | Converted 2501.17703v2.pdf — 63,494 chars of Markdown
+2026-03-02 10:55:00,495 | INFO     | src.utils.image_enricher | No base64 images found — skipping enrichment.
+2026-03-02 10:55:00,504 | INFO     | src.chunking.structure_recursive | structure_recursive_chunk: doc='2501.17703v2.pdf' → 140 chunks (text=116, table=24, image=0)

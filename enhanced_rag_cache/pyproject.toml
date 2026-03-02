@@ -1,0 +1,26 @@
+[project]
+name = "enhanced-rag-cache"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.115.6",
+    "groq>=1.0.0",
+    "langchain-core>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-text-splitters==0.3.6",
+    "numpy==2.2.3",
+    "openai==1.65.1",
+    "pdfplumber>=0.11.9",
+    "pinecone==6.0.2",
+    "pymupdf4llm==0.0.17",
+    "pypdf==5.1.0",
+    "python-dotenv==1.0.1",
+    "python-multipart==0.0.20",
+    "pyyaml==6.0.2",
+    "redis==5.2.1",
+    "requests==2.32.3",
+    "streamlit==1.41.1",
+    "uvicorn[standard]==0.34.0",
+]

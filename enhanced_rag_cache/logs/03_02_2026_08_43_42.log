@@ -1,0 +1,5 @@
+2026-03-02 08:43:42,961 | INFO     | src.utils.pdf_to_markdown | Converting PDF → Markdown: 2602.03442v1_rag_pdf-1-9.pdf  (embed_images=True)
+2026-03-02 08:43:45,436 | INFO     | src.utils.pdf_to_markdown | Converted 2602.03442v1_rag_pdf-1-9.pdf — 627,965 chars of Markdown
+2026-03-02 08:43:46,069 | INFO     | src.chunking.table_aware | table_aware_chunk: doc='2602.03442v1_rag_pdf-1-9.pdf' → 746 chunks  (text=746, table=0, image=0)
+2026-03-02 08:43:47,209 | INFO     | src.chunking.parent_child | Parent-Child chunking: doc='2602.03442v1_rag_pdf-1-9.pdf' → 461 parents, 2728 children
+2026-03-02 08:43:47,707 | INFO     | src.chunking.structure_recursive | Structure-Recursive chunking: doc='2602.03442v1_rag_pdf-1-9.pdf' → 1213 chunks from 9 sections
