@@ -11,8 +11,8 @@ DOCS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data")
 Path(DOCS_DIR).mkdir(parents=True, exist_ok=True)
 
 st.set_page_config(
-    page_title="Enhanced RAG Cache",
-    page_icon="🧠",
+    page_title="SmartCache RAG™",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -35,54 +35,62 @@ st.markdown("""
     .main .block-container { padding-top: 1.5rem; max-width: 1400px; }
 
     .bot-title {
-        text-align: center; font-size: 2.2rem; font-weight: 800;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        background-clip: text; margin-bottom: 0.5rem;
+        text-align: center; 
+        font-size: 2.8rem; 
+        font-weight: 900;
+        color: #10b981;
+        background: linear-gradient(120deg, #10b981, #14b8a6, #06b6d4, #0ea5e9);
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+        letter-spacing: -0.5px;
     }
     .subtitle {
-        text-align: center; color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem;
+        text-align: center; color: #475569; font-size: 1rem; margin-bottom: 1.5rem;
+        font-weight: 500; letter-spacing: 0.3px;
     }
 
     /* Cache tier badges */
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px;
-             font-size: 0.75rem; font-weight: 700; margin-left: 8px; }
-    .badge-t1  { background: #dcfce7; color: #15803d; }
-    .badge-t2  { background: #dbeafe; color: #1d4ed8; }
-    .badge-t3  { background: #fef9c3; color: #a16207; }
-    .badge-miss{ background: #fee2e2; color: #b91c1c; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 16px;
+             font-size: 0.75rem; font-weight: 700; margin-left: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .badge-t1  { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; }
+    .badge-t2  { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0f766e; }
+    .badge-t3  { background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #075985; }
+    .badge-miss{ background: linear-gradient(135deg, #ffe4e6, #fecdd3); color: #be123c; }
 
     /* Chat bubbles */
     .user-msg {
-        background: #f1f5f9; border-radius: 14px; padding: 10px 16px;
+        background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 16px; padding: 12px 18px;
         margin: 8px 0; max-width: 75%; float: left; clear: both;
-        box-shadow: 0 1px 3px rgba(0,0,0,.1);
+        box-shadow: 0 2px 4px rgba(20, 184, 166, 0.1);
     }
     .bot-msg {
-        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        color: white; border-radius: 14px; padding: 10px 16px;
+        background: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #06b6d4 100%);
+        color: white; border-radius: 16px; padding: 12px 18px;
         margin: 8px 0; max-width: 85%; float: right; clear: both;
-        box-shadow: 0 2px 6px rgba(99,102,241,.3);
+        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.4);
     }
     .meta-row { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
     .clearfix::after { content:""; display:table; clear:both; }
 
     /* Source cards */
     .src-card {
-        background: #f8fafc; border-left: 3px solid #6366f1;
-        border-radius: 6px; padding: 8px 12px; margin: 6px 0;
-        font-size: 0.85rem;
+        background: #f0fdfa; border-left: 4px solid #14b8a6;
+        border-radius: 8px; padding: 10px 14px; margin: 6px 0;
+        font-size: 0.85rem; box-shadow: 0 1px 3px rgba(20, 184, 166, 0.1);
     }
-    .src-title { font-weight: 600; color: #1e293b; }
-    .src-section { color: #6366f1; font-size: 0.78rem; }
+    .src-title { font-weight: 600; color: #0f172a; }
+    .src-section { color: #0d9488; font-size: 0.78rem; font-weight: 600; }
 
     /* Metric cards */
     .metric-card {
-        background: white; border-radius: 10px; padding: 14px 16px;
-        text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+        background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+        border: 1px solid #ccfbf1; border-radius: 12px; padding: 16px 18px;
+        text-align: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
     }
-    .metric-val { font-size: 1.8rem; font-weight: 800; color: #6366f1; }
-    .metric-lbl { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+    .metric-val { font-size: 1.9rem; font-weight: 900; color: #10b981; }
+    .metric-lbl { font-size: 0.78rem; color: #64748b; margin-top: 4px; font-weight: 600; }
 
     .sample-btn { width: 100%; margin-bottom: 8px; }
 </style>
@@ -100,7 +108,7 @@ TIER_BADGE = {
 
 
 def _tier_color(tier):
-    return {1: "#15803d", 2: "#1d4ed8", 3: "#a16207", None: "#b91c1c"}.get(tier, "#b91c1c")
+    return {1: "#065f46", 2: "#0f766e", 3: "#075985", None: "#be123c"}.get(tier, "#be123c")
 
 
 def _api_health():
@@ -114,7 +122,8 @@ def _api_health():
 # ── Sidebar ────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown("## 🧠 Enhanced RAG Cache")
+    st.markdown("## ⚡ SmartCache RAG™")
+    st.markdown("<p style='font-size: 0.8rem; color: #64748b; margin-top: -10px;'>Intelligent Multi-Tier Caching</p>", unsafe_allow_html=True)
     st.markdown("---")
 
     # Backend status
@@ -151,7 +160,7 @@ with st.sidebar:
 
     if uploaded:
         st.info(f"📄 {uploaded.name}")
-        if st.button("🚀 Ingest Document", use_container_width=True):
+        if st.button("🚀 Ingest Document"):
             with st.spinner("Ingesting…"):
                 content = uploaded.read()
                 dest = Path(DOCS_DIR) / uploaded.name
@@ -216,9 +225,9 @@ with st.sidebar:
         st.caption("Redis stats unavailable")
 
     col_a, col_b = st.columns(2)
-    if col_a.button("📊 Refresh Stats", use_container_width=True):
+    if col_a.button("📊 Refresh Stats"):
         st.session_state["_refresh_stats"] = True
-    if col_b.button("🗑️ Clear Cache", use_container_width=True):
+    if col_b.button("🗑️ Clear Cache"):
         try:
             r = requests.delete(f"{API_BASE}/cache/clear", timeout=10)
             if r.ok:
@@ -232,12 +241,17 @@ with st.sidebar:
 
 # ── Main ───────────────────────────────────────────────────────────────────
 
-st.markdown('<h1 class="bot-title">🧠 Enhanced RAG Cache</h1>', unsafe_allow_html=True)
-st.markdown(
-    '<p class="subtitle">Parent-Child & Structure-Recursive Chunking · '
-    'Three-Tier Cache (Exact / Semantic / Retrieval)</p>',
-    unsafe_allow_html=True,
-)
+# Centered title: place the title and subtitle in the middle column for visual balance
+col_l, col_c, col_r = st.columns([1, 2, 1])
+with col_c:
+    # Use an HTML wrapper to ensure the header appears centered while keeping the bot-title styling
+    st.markdown(
+        '<div style="text-align:center">'
+        '<h1 class="bot-title">⚡ SmartCache RAG™</h1>'
+        '<p class="subtitle">🎯 Advanced Multi-Strategy Chunking · 🚀 Lightning-Fast 3-Tier Intelligent Cache · 🔮 AI-Powered Retrieval</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
 # ── Cache analytics strip ─────────────────────────────────────────────────
 counts = st.session_state["cache_hit_counts"]
@@ -246,22 +260,22 @@ total_lat = st.session_state["total_latency_ms"]
 
 m1, m2, m3, m4, m5, m6 = st.columns(6)
 m1.markdown(
-    f'<div class="metric-card"><div class="metric-val" style="color:#15803d">'
+    f'<div class="metric-card"><div class="metric-val" style="color:#065f46">'
     f'{counts["exact"]}</div><div class="metric-lbl">⚡ Exact Hits</div></div>',
     unsafe_allow_html=True,
 )
 m2.markdown(
-    f'<div class="metric-card"><div class="metric-val" style="color:#1d4ed8">'
+    f'<div class="metric-card"><div class="metric-val" style="color:#0f766e">'
     f'{counts["semantic"]}</div><div class="metric-lbl">🌊 Semantic Hits</div></div>',
     unsafe_allow_html=True,
 )
 m3.markdown(
-    f'<div class="metric-card"><div class="metric-val" style="color:#a16207">'
+    f'<div class="metric-card"><div class="metric-val" style="color:#075985">'
     f'{counts["retrieval"]}</div><div class="metric-lbl">📦 Retrieval Hits</div></div>',
     unsafe_allow_html=True,
 )
 m4.markdown(
-    f'<div class="metric-card"><div class="metric-val" style="color:#b91c1c">'
+    f'<div class="metric-card"><div class="metric-val" style="color:#be123c">'
     f'{counts["miss"]}</div><div class="metric-lbl">🔴 Full Pipeline</div></div>',
     unsafe_allow_html=True,
 )
@@ -288,10 +302,10 @@ if st.session_state.get("_refresh_stats"):
             sd = sr.json()
             sc1, sc2, sc3, sc4 = st.columns(4)
             for col, key, label, color in [
-                (sc1, "tier1_exact", "Tier-1 Exact entries", "#15803d"),
-                (sc2, "tier2_semantic", "Tier-2 Semantic entries", "#1d4ed8"),
-                (sc3, "tier3_retrieval", "Tier-3 Retrieval entries", "#a16207"),
-                (sc4, "parent_cache", "Parent chunks cached", "#7c3aed"),
+                (sc1, "tier1_exact", "Tier-1 Exact entries", "#065f46"),
+                (sc2, "tier2_semantic", "Tier-2 Semantic entries", "#0f766e"),
+                (sc3, "tier3_retrieval", "Tier-3 Retrieval entries", "#075985"),
+                (sc4, "parent_cache", "Parent chunks cached", "#10b981"),
             ]:
                 entries = sd.get(key, {}).get("entries", "N/A")
                 col.markdown(
@@ -317,7 +331,7 @@ with chat_area:
     if not st.session_state["chat_history"]:
         st.markdown("### 💡 Try asking:")
         for idx, q in enumerate(SAMPLES):
-            if st.button(q, key=f"sample_{idx}", use_container_width=True):
+            if st.button(q, key=f"sample_{idx}"):
                 st.session_state["current_question"] = q
                 st.rerun()
     else:
@@ -402,10 +416,8 @@ with st.form("chat_form", clear_on_submit=True):
     user_input = c1.text_input(
         "Ask a question",
         value=st.session_state.get("current_question", ""),
-        placeholder="Ask anything about your documents…",
-        label_visibility="collapsed",
     )
-    submitted = c2.form_submit_button("Send 📤", use_container_width=True)
+    submitted = c2.form_submit_button("Send 📤")
 
 if submitted and user_input.strip():
     st.session_state["current_question"] = ""

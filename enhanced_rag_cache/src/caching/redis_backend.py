@@ -59,7 +59,7 @@ class RedisCacheBackend(CacheBackend):
 
     def __init__(self, redis_url: str = "redis://localhost:6379/0") -> None:
         self._redis_url = redis_url
-        self._r: redis.Redis = get_redis_client()  # type: ignore[assignment]
+        self._r: redis.Redis = get_redis_client(redis_url)  # type: ignore[assignment]
         if self._r is None:
             raise ConnectionError(
                 f"Could not connect to Redis at {redis_url}. "
@@ -153,17 +153,18 @@ class RedisCacheBackend(CacheBackend):
             entry_key = f"{_PFX_SEM}:{raw_id.decode()}"
             entry = self._get(entry_key)
             if entry is None:
-                # Key expired but still in set — will be cleaned by cleanup_expired
+                # Key TTL-expired in Redis — remove orphaned index member immediately
+                self._r.srem(index_key, raw_id)
+                continue
+
+            # Doc-version staleness check first so stale entries are always cleaned
+            if entry.get("doc_version", 0) < current_version:
+                self._r.delete(entry_key)
+                self._r.srem(index_key, raw_id)
                 continue
 
             # Filter by source
             if entry.get("source_filter", "") != source_filter:
-                continue
-
-            # Doc-version staleness
-            if entry.get("doc_version", 0) < current_version:
-                self._r.delete(entry_key)
-                self._r.srem(index_key, raw_id)
                 continue
 
             # Compute similarity
@@ -241,14 +242,17 @@ class RedisCacheBackend(CacheBackend):
             entry_key = f"{_PFX_RET}:{raw_id.decode()}"
             entry = self._get(entry_key)
             if entry is None:
+                # Key TTL-expired in Redis — remove orphaned index member immediately
+                self._r.srem(index_key, raw_id)
                 continue
 
-            if entry.get("source_filter", "") != source_filter:
-                continue
-
+            # Doc-version staleness check first so stale entries are always cleaned
             if entry.get("doc_version", 0) < current_version:
                 self._r.delete(entry_key)
                 self._r.srem(index_key, raw_id)
+                continue
+
+            if entry.get("source_filter", "") != source_filter:
                 continue
 
             cached_emb = bytes_to_embedding(bytes.fromhex(entry["embedding_hex"]))

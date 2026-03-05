@@ -52,7 +52,7 @@ retrieval:
 cache:
   # Backend: "redis" (production) or "sqlite" (dev/fallback)
   # Override via CACHE_BACKEND env var
-  backend: "sqlite"
+  backend: "redis"
   enabled: true
 
   # SQLite path (used when backend = "sqlite")

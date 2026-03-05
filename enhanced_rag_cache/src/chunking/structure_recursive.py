@@ -77,7 +77,7 @@ class StructChunk:
     def to_pinecone_record(self) -> dict:
         record: dict[str, Any] = {
             "_id":          self.chunk_id,
-            "chunk_text":   self.text,
+            "text":         self.text,
             "source":       self.source,
             "doc_id":       self.doc_id,
             "strategy":     "structure_recursive",

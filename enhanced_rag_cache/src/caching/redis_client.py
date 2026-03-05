@@ -23,25 +23,30 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def get_redis_client() -> Optional[_redis_lib.Redis]:
+def get_redis_client(redis_url: Optional[str] = None) -> Optional[_redis_lib.Redis]:
     """
-    Connect to Redis using REDIS_URL (env var) or config.yaml redis.url.
+    Connect to Redis using the supplied URL, REDIS_URL env var, or config.yaml redis.url.
+
+    Args:
+        redis_url: Optional explicit URL.  When provided it takes precedence over
+                   the env var and config file, so callers can supply their own URL.
 
     Returns:
         A connected redis.Redis instance, or None if the connection fails.
     """
-    redis_url: str = os.getenv(
-        "REDIS_URL",
-        cfg.get("redis", {}).get("url", "redis://localhost:6379/0"),
+    resolved_url: str = (
+        redis_url
+        or os.getenv("REDIS_URL")
+        or cfg.get("redis", {}).get("url", "redis://localhost:6379/0")
     )
     try:
         client = _redis_lib.from_url(
-            redis_url,
+            resolved_url,
             decode_responses=False,          # raw bytes — required for hex-embedded embeddings
             socket_connect_timeout=3,
         )
         client.ping()
-        logger.info(f"Redis connection established: {redis_url}")
+        logger.info(f"Redis connection established: {resolved_url}")
         return client
     except Exception as exc:
         logger.warning(

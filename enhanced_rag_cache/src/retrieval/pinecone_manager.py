@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import os
 import time
-import logging
 from typing import Any, Dict, List
 
 from pinecone import Pinecone
@@ -38,7 +37,7 @@ def _get_or_create_index():
             region=_PCFG["region"],
             embed={
                 "model": _PCFG["embed_model"],
-                "field_map": {"text": "chunk_text"},
+                "field_map": {"text": "text"},
             },
         )
         logger.info("Waiting for index to become ready …")
@@ -69,7 +68,7 @@ def upsert_records(
     """
     Upsert records into Pinecone.
 
-    Each record must contain at minimum: _id, chunk_text, source.
+    Each record must contain at minimum: _id, text, source.
     Additional metadata fields are stored as-is.
 
     Returns total number of records upserted.

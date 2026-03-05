@@ -39,12 +39,20 @@ def store_parents(parents: List[Dict[str, Any]]) -> None:
     Args:
         parents: List of parent chunk dicts (from ParentChunk.to_redis_dict()).
     """
+    if not parents:
+        logger.debug("No parent chunks to store.")
+        return
+    
     client = get_redis_client()
     if client is None:
+        logger.warning("Redis unavailable; skipping parent storage.")
         return
 
     pipe = client.pipeline()
     for p in parents:
+        if "parent_id" not in p:
+            logger.error(f"Parent chunk missing 'parent_id' field: {p}")
+            continue
         key = _make_key(p["parent_id"])
         pipe.set(key, json.dumps(p).encode(), ex=_TTL)
     try:
@@ -80,14 +88,25 @@ def get_parent(parent_id: str) -> Optional[Dict[str, Any]]:
 
 def flush_document(doc_id: str) -> int:
     """Delete all parent chunks for a specific document."""
+    if not doc_id:
+        logger.warning("flush_document called with empty doc_id")
+        return 0
+    
     client = get_redis_client()
     if client is None:
+        logger.warning("Redis unavailable; cannot flush document parents.")
         return 0
-    pattern = _make_key(f"{doc_id}::*")
+    
+    # Pattern: parent:<doc_id>::parent_*
+    # This matches keys like parent:report.pdf::parent_0, parent:report.pdf::parent_1, etc.
+    pattern = _make_key(f"{doc_id}::parent_*")
     try:
         keys = client.keys(pattern)
         if keys:
-            return client.delete(*keys)
+            deleted = client.delete(*keys)
+            logger.info(f"Flushed {deleted} parent chunks for doc_id='{doc_id}'")
+            return deleted
+        logger.debug(f"No parent chunks found for doc_id='{doc_id}'")
         return 0
     except Exception as exc:
         logger.warning(f"Parent cache flush error for doc '{doc_id}': {exc}")

@@ -83,9 +83,6 @@ def ingest_document(
             logger.info(f"[PDF] Raw markdown: {len(raw_md):,} chars")
 
             logger.info(f"[PDF] Step 2/3 — Image enrichment via Groq vision")
-            # Single pass: enrich images AND emit __IMG_BLOCK_N__ placeholders.
-            # Returns (cleaned_md_with_tokens, image_block_dicts) so the
-            # chunker never needs to re-scan for enriched image text.
             enriched_md, image_blocks = enrich_markdown_images(raw_md)
             logger.info(f"[PDF] Enriched markdown: {len(enriched_md):,} chars, {len(image_blocks)} image(s)")
         else:
