@@ -8,33 +8,47 @@
 
 ```mermaid
 flowchart TD
-    A([User Query]) --> B[Normalize + Hash]
+        A([User Query]) --> B[Normalize + Hash]
 
-    B --> C{Tier 1\nExact Cache}
-    C -- HIT --> Z1([Return Answer])
-    C -- MISS --> D[Embed Query\nopenai text-embedding-3-small]
+        B --> C{Tier 1\nExact Cache}
+        C -- HIT --> Z1([Return Answer])
+        C -- MISS --> D[Embed Query\nopenai text-embedding-3-small]
 
-    D --> E{Tier 2\nSemantic Cache\ncosine ≥ 0.92}
-    E -- HIT --> Z2([Return Answer])
-    E -- MISS --> F{Tier 3\nRetrieval Cache\ncosine ≥ 0.80}
+        D --> E{Tier 2\nSemantic Cache\ncosine ≥ 0.92}
+        E -- HIT --> Z2([Return Answer])
+        E -- MISS --> F{Tier 3\nRetrieval Cache\ncosine ≥ 0.80}
 
-    F -- HIT --> G[Re-inject Parent\nfrom Redis]
-    G --> H[LLM\nGPT-4o-mini]
-    H --> Z3([Return Answer])
+        F -- HIT --> G[Re-inject Parent\nfrom Redis]
+        G --> H[LLM\nGPT-4o-mini]
+        H --> Z3([Return Answer])
 
-    F -- MISS --> I[Pinecone\nVector Search]
-    I --> J[BGE Reranker]
-    J --> K[group_children_by_parent\nDeduplicate parent IDs]
-    K --> L[fetch_parent_chunks\nRedis — 1 GET per unique parent]
-    L --> M[merge_children_to_parents\nUnique parent texts only]
-    M --> H
+        F -- MISS --> I[Pinecone\nVector Search]
+        I --> J[BGE Reranker]
+        J --> K[group_children_by_parent\nDeduplicate parent IDs]
+        K --> L[fetch_parent_chunks\nRedis — 1 GET per unique parent]
+        L --> M[merge_children_to_parents\nUnique parent texts only]
+        M --> H
 
-    H --> N[(Write-through\nAll 3 Tiers)]
+        H --> N[(Write-through\nAll 3 Tiers)]
 
-    style Z1 fill:#d1fae5,stroke:#10b981,color:#065f46
-    style Z2 fill:#ccfbf1,stroke:#14b8a6,color:#0f766e
-    style Z3 fill:#e0f2fe,stroke:#0ea5e9,color:#075985
-    style N  fill:#fef9c3,stroke:#eab308,color:#713f12
+        %% Ingestion subgraph: PDF -> enriched markdown -> chunking -> upsert
+        subgraph ING["Ingestion (offline) — PDF → Enriched Markdown → Chunking"]
+            direction TB
+            P0[PDF -> Markdown\npymupdf4llm] --> P1[Extract image URLs\nand alt-text placeholders]
+            P1 --> P2[Image Enricher\nGroq vision -> image summaries]
+            P2 --> P6["Enriched Markdown\nmarkdown and image summaries"]
+            P6 --> P3[Structure-aware chunking\nstructure_recursive]
+            P6 --> P4[Parent/Child chunking\nparent_child]
+            P3 --> P5[Embed & Upsert\ninto Pinecone]
+            P4 --> P5
+        end
+
+        P5 --> I
+
+        style Z1 fill:#d1fae5,stroke:#10b981,color:#065f46
+        style Z2 fill:#ccfbf1,stroke:#14b8a6,color:#0f766e
+        style Z3 fill:#e0f2fe,stroke:#0ea5e9,color:#075985
+        style N  fill:#fef9c3,stroke:#eab308,color:#713f12
 ```
 
 ---
