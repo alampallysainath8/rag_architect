@@ -2,8 +2,9 @@
 Reranker — Pinecone-hosted BGE reranker (bge-reranker-v2-m3).
 
 Combines vector search + reranking in a single Pinecone call for efficiency.
-After reranking, parent context is injected for any child chunks from the
-parent-child strategy so the LLM always sees the full parent text.
+After reranking, child hits are passed through merge_children_to_parents()
+which deduplicates by parent_id, performs one Redis GET per unique parent,
+and returns one context entry per parent — eliminating duplicate LLM tokens.
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from typing import Any, Dict, List
 
 from pinecone import Pinecone
 
-from src.caching.parent_cache import get_parent
+from src.retrieval.parent_merger import merge_children_to_parents
 from src.utils.config_loader import cfg
 from src.utils.logger import get_logger
 
@@ -61,46 +62,36 @@ def rerank(
         logger.error(f"Pinecone rerank failed: {exc}")
         raise
 
-    hits: List[Dict[str, Any]] = []
+    # ── Collect raw child hits from Pinecone ────────────────────────────
+    raw_hits: List[Dict[str, Any]] = []
     for item in results.get("result", {}).get("hits", []):
         fields: dict = item.get("fields", {})
-        hit: Dict[str, Any] = {
-            "id": item.get("_id", ""),
-            "score": item.get("_score", 0.0),
+        raw_hits.append({
+            "id":         item.get("_id", ""),
+            "score":      item.get("_score", 0.0),
             "chunk_text": fields.get("chunk_text", ""),
-            "source": fields.get("source", ""),
-            "doc_id": fields.get("doc_id", ""),
-            "parent_id": fields.get("parent_id", ""),
-            "level": fields.get("level", ""),
-            "strategy": fields.get("strategy", ""),
-            "h1": fields.get("h1", ""),
-            "h2": fields.get("h2", ""),
-            "h3": fields.get("h3", ""),
-            "h4": fields.get("h4", ""),
-            "context_text": fields.get("chunk_text", ""),  # default: same as chunk
-        }
-
-        # ── Parent-Child: replace context_text with full parent ───────────
-        parent_id = hit["parent_id"]
-        if parent_id:
-            parent = get_parent(parent_id)
-            if parent:
-                hit["context_text"] = parent["text"]
-                logger.debug(
-                    f"Parent context injected for chunk '{hit['id']}' "
-                    f"(parent_id='{parent_id}', "
-                    f"parent_len={len(parent['text'])})"
-                )
-            else:
-                logger.debug(
-                    f"Parent '{parent_id}' not found in Redis cache — "
-                    f"using child chunk text as context."
-                )
-
-        hits.append(hit)
+            "source":     fields.get("source", ""),
+            "doc_id":     fields.get("doc_id", ""),
+            "parent_id":  fields.get("parent_id", ""),
+            "level":      fields.get("level", ""),
+            "strategy":   fields.get("strategy", ""),
+            "h1":         fields.get("h1", ""),
+            "h2":         fields.get("h2", ""),
+            "h3":         fields.get("h3", ""),
+            "h4":         fields.get("h4", ""),
+        })
 
     logger.info(
-        f"Reranked: {len(hits)} hits returned for query='{query[:60]}'"
+        "rerank: %d raw hits from Pinecone for query='%s'",
+        len(raw_hits), query[:60],
+    )
+
+    # ── Merge children -> unique parents (1 Redis GET per unique parent) ─
+    hits = merge_children_to_parents(raw_hits)
+
+    logger.info(
+        "rerank: %d context chunks after parent merge for query='%s'",
+        len(hits), query[:60],
     )
     return hits
 
@@ -120,13 +111,8 @@ def rerank_preloaded(
     Returns:
         Same list with `context_text` populated from Redis when available.
     """
-    enriched = []
-    for hit in chunks:
-        hit = dict(hit)   # shallow copy
-        parent_id = hit.get("parent_id", "")
-        if parent_id:
-            parent = get_parent(parent_id)
-            if parent:
-                hit["context_text"] = parent["text"]
-        enriched.append(hit)
-    return enriched
+    logger.debug(
+        "rerank_preloaded: %d cached chunks for query='%s'",
+        len(chunks), (query or "")[:60],
+    )
+    return merge_children_to_parents(chunks)

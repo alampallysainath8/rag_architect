@@ -257,3 +257,13 @@ class CacheBackend(ABC):
         Returns:
             Number of records deleted.
         """
+
+    @abstractmethod
+    def list_documents(self) -> list:
+        """
+        Return all ingested document records sorted by created_at descending.
+
+        Returns:
+            List of dicts with keys {file_hash, file_name, file_size,
+            chunk_count, doc_version, created_at}.
+        """

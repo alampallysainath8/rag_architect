@@ -213,14 +213,20 @@ class ChildChunk:
     chunk_type: str = "text"  # "text" | "table" | "image"
 
     def to_pinecone_record(self) -> dict:
-        """Return a record suitable for Pinecone upsert_records()."""
+        """Return a record suitable for Pinecone upsert_records().
+
+        ``text`` is consumed by Pinecone's field_map for embedding.
+        ``chunk_text`` is the same value stored as a plain metadata field
+        so rank_fields and fields queries can reference it by name.
+        """
         return {
-            "_id": self.chunk_id,
-            "text": self.text,
-            "source": self.source,
-            "doc_id": self.doc_id,
-            "parent_id": self.parent_id,
-            "level": "child",
+            "_id":        self.chunk_id,
+            "text":       self.text,        # embedding source (field_map)
+            "chunk_text": self.text,        # reranking + metadata retrieval
+            "source":     self.source,
+            "doc_id":     self.doc_id,
+            "parent_id":  self.parent_id,
+            "level":      "child",
             "chunk_type": self.chunk_type,
             "chunk_index": str(self.chunk_index),
         }

@@ -121,6 +121,7 @@ class SQLiteCacheBackend(CacheBackend):
                     file_name   TEXT NOT NULL,
                     file_size   INTEGER NOT NULL,
                     chunk_count INTEGER NOT NULL,
+                    doc_version INTEGER NOT NULL DEFAULT 0,
                     created_at  REAL NOT NULL
                 );
 
@@ -134,6 +135,15 @@ class SQLiteCacheBackend(CacheBackend):
                 """
             )
             conn.commit()
+            # Migrate: add doc_version column to existing DBs that pre-date this column
+            try:
+                conn.execute(
+                    "ALTER TABLE document_hashes ADD COLUMN doc_version INTEGER NOT NULL DEFAULT 0"
+                )
+                conn.commit()
+                logger.info("Migrated document_hashes: added doc_version column")
+            except Exception:
+                pass  # column already exists — expected for fresh databases
         except Exception as exc:
             logger.error(f"Failed to initialize SQLite tables: {exc}")
             raise
@@ -518,7 +528,7 @@ class SQLiteCacheBackend(CacheBackend):
         conn = self._get_conn()
         try:
             row = conn.execute(
-                "SELECT file_name, file_size, chunk_count, created_at "
+                "SELECT file_name, file_size, chunk_count, doc_version, created_at "
                 "FROM document_hashes WHERE file_hash = ?",
                 (file_hash,),
             ).fetchone()
@@ -528,6 +538,7 @@ class SQLiteCacheBackend(CacheBackend):
                 "file_name":   row["file_name"],
                 "file_size":   row["file_size"],
                 "chunk_count": row["chunk_count"],
+                "doc_version": row["doc_version"],
                 "created_at":  row["created_at"],
             }
         except Exception as exc:
@@ -539,15 +550,17 @@ class SQLiteCacheBackend(CacheBackend):
     def set_document_hash(self, file_hash: str, metadata: dict) -> None:
         conn = self._get_conn()
         try:
+            doc_version = metadata.get("doc_version", self.get_doc_version())
             conn.execute(
                 """INSERT OR REPLACE INTO document_hashes
-                   (file_hash, file_name, file_size, chunk_count, created_at)
-                   VALUES (?, ?, ?, ?, ?)""",
+                   (file_hash, file_name, file_size, chunk_count, doc_version, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
                 (
                     file_hash,
                     metadata["file_name"],
                     metadata["file_size"],
                     metadata["chunk_count"],
+                    doc_version,
                     time.time(),
                 ),
             )
@@ -589,5 +602,29 @@ class SQLiteCacheBackend(CacheBackend):
             logger.error(f"Error clearing document hashes: {exc}")
             conn.rollback()
             return 0
+        finally:
+            conn.close()
+
+    def list_documents(self) -> list:
+        conn = self._get_conn()
+        try:
+            rows = conn.execute(
+                "SELECT file_hash, file_name, file_size, chunk_count, doc_version, created_at "
+                "FROM document_hashes ORDER BY created_at DESC"
+            ).fetchall()
+            return [
+                {
+                    "file_hash":   r["file_hash"],
+                    "file_name":   r["file_name"],
+                    "file_size":   r["file_size"],
+                    "chunk_count": r["chunk_count"],
+                    "doc_version": r["doc_version"],
+                    "created_at":  r["created_at"],
+                }
+                for r in rows
+            ]
+        except Exception as exc:
+            logger.error(f"Error listing documents: {exc}")
+            return []
         finally:
             conn.close()

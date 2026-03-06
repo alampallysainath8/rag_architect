@@ -75,9 +75,17 @@ class StructChunk:
     metadata:     dict[str, Any] = field(default_factory=dict)
 
     def to_pinecone_record(self) -> dict:
+        """Return a record suitable for Pinecone upsert_records().
+
+        ``text`` is consumed by Pinecone's field_map for embedding.
+        ``chunk_text`` is the same value stored as a plain metadata field
+        so rank_fields and fields queries can reference it by name,
+        matching the layout used by parent-child child chunks.
+        """
         record: dict[str, Any] = {
             "_id":          self.chunk_id,
-            "text":         self.text,
+            "text":         self.text,        # embedding source (field_map)
+            "chunk_text":   self.text,        # reranking + metadata retrieval
             "source":       self.source,
             "doc_id":       self.doc_id,
             "strategy":     "structure_recursive",

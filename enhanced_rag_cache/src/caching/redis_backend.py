@@ -410,14 +410,37 @@ class RedisCacheBackend(CacheBackend):
     def set_document_hash(self, file_hash: str, metadata: dict) -> None:
         key = f"{_PFX_DOC}:{file_hash}"
         index_key = f"{_PFX_DOC}:index"
+        # Use the doc_version passed in metadata (should be post-bump version)
+        # so each document record knows which corpus version it belongs to.
+        doc_version = metadata.get("doc_version", self.get_doc_version())
         data = {
             "file_name":   metadata["file_name"],
             "file_size":   metadata["file_size"],
             "chunk_count": metadata["chunk_count"],
+            "doc_version": doc_version,
             "created_at":  time.time(),
         }
         self._set(key, data)
         self._r.sadd(index_key, file_hash)
+
+    def list_documents(self) -> list:
+        index_key = f"{_PFX_DOC}:index"
+        hash_ids = self._r.smembers(index_key)
+        docs = []
+        for raw_hash in hash_ids:
+            file_hash = raw_hash.decode()
+            entry = self._get(f"{_PFX_DOC}:{file_hash}")
+            if entry:
+                docs.append({
+                    "file_hash":   file_hash,
+                    "file_name":   entry.get("file_name", ""),
+                    "file_size":   entry.get("file_size", 0),
+                    "chunk_count": entry.get("chunk_count", 0),
+                    "doc_version": entry.get("doc_version", 0),
+                    "created_at":  entry.get("created_at", 0),
+                })
+        docs.sort(key=lambda d: d["created_at"], reverse=True)
+        return docs
 
     def remove_document_hash_by_name(self, file_name: str) -> bool:
         index_key = f"{_PFX_DOC}:index"

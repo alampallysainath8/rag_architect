@@ -43,29 +43,7 @@ app = FastAPI(
         "and a three-tier (Exact / Semantic / Retrieval) caching system."
     ),
     version="2.0.0",
-    docs_url=None,   # served below via custom route (unpkg CDN — no jsdelivr)
-    redoc_url=None,
 )
-
-# Swagger UI and ReDoc served from unpkg (more reliable than jsdelivr)
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
-
-@app.get("/docs", include_in_schema=False)
-def custom_swagger():
-    return get_swagger_ui_html(
-        openapi_url="/openapi.json",
-        title="Enhanced RAG Cache API",
-        swagger_js_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js",
-        swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
-    )
-
-@app.get("/redoc", include_in_schema=False)
-def custom_redoc():
-    return get_redoc_html(
-        openapi_url="/openapi.json",
-        title="Enhanced RAG Cache API",
-        redoc_js_url="https://unpkg.com/redoc@2/bundles/redoc.standalone.js",
-    )
 
 # ── Pydantic Models ───────────────────────────────────────────────────────────
 
@@ -199,16 +177,17 @@ async def ingest_upload(
             namespace=namespace,
         )
 
-        # Store document hash to prevent future duplicate uploads
+        # Bump doc version FIRST so stale cache entries are invalidated,
+        # then store the document hash with the new version number.
+        new_version = cache.bump_doc_version()
+        logger.info(f"Doc version bumped to {new_version} after upload: {file.filename}")
+
         cache.set_document_hash(file_hash, {
             "file_name":   file.filename,
             "file_size":   len(content),
             "chunk_count": result.get("chunk_count", 0),
+            "doc_version": new_version,
         })
-
-        # Bump doc version so stale cache entries are invalidated
-        cache.bump_doc_version()
-        logger.info(f"Doc version bumped after upload: {file.filename}")
 
         return IngestResponse(
             **result,
@@ -221,6 +200,12 @@ async def ingest_upload(
     except Exception as e:
         logger.exception("Upload ingestion error")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/documents")
+def list_documents():
+    """List all ingested documents with their file hash, version, and chunk count."""
+    return get_cache_backend().list_documents()
 
 
 @app.post("/chat", response_model=ChatResponse)
