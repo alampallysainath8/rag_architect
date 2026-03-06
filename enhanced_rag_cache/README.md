@@ -1,15 +1,41 @@
-# Enhanced RAG Cache
+﻿# ⚡ Enhanced RAG Cache
 
-Production-grade RAG pipeline with **intelligent document chunking** and a **three-tier caching system** built on Pinecone, OpenAI, and Redis.
+> Production-grade RAG · Parent-Child chunking · 3-Tier intelligent caching · Pinecone + Redis + OpenAI
 
-## What's New vs Classic RAG
+---
 
-| Feature | Classic RAG | Enhanced RAG Cache |
-|---|---|---|
-| Chunking | Fixed-size flat chunks | Parent-Child + Structure-Recursive |
-| Caching | None | 3-tier (Exact / Semantic / Retrieval) |
-| LLM context | Narrow child chunks | Full parent context sent to LLM |
-| Redundant calls | Every query hits LLM | Cached answers skip Pinecone + LLM |
+## Flow
+
+```mermaid
+flowchart TD
+    A([User Query]) --> B[Normalize + Hash]
+
+    B --> C{Tier 1\nExact Cache}
+    C -- HIT --> Z1([Return Answer])
+    C -- MISS --> D[Embed Query\nopenai text-embedding-3-small]
+
+    D --> E{Tier 2\nSemantic Cache\ncosine ≥ 0.92}
+    E -- HIT --> Z2([Return Answer])
+    E -- MISS --> F{Tier 3\nRetrieval Cache\ncosine ≥ 0.80}
+
+    F -- HIT --> G[Re-inject Parent\nfrom Redis]
+    G --> H[LLM\nGPT-4o-mini]
+    H --> Z3([Return Answer])
+
+    F -- MISS --> I[Pinecone\nVector Search]
+    I --> J[BGE Reranker]
+    J --> K[group_children_by_parent\nDeduplicate parent IDs]
+    K --> L[fetch_parent_chunks\nRedis — 1 GET per unique parent]
+    L --> M[merge_children_to_parents\nUnique parent texts only]
+    M --> H
+
+    H --> N[(Write-through\nAll 3 Tiers)]
+
+    style Z1 fill:#d1fae5,stroke:#10b981,color:#065f46
+    style Z2 fill:#ccfbf1,stroke:#14b8a6,color:#0f766e
+    style Z3 fill:#e0f2fe,stroke:#0ea5e9,color:#075985
+    style N  fill:#fef9c3,stroke:#eab308,color:#713f12
+```
 
 ---
 
@@ -17,155 +43,106 @@ Production-grade RAG pipeline with **intelligent document chunking** and a **thr
 
 ```
 enhanced_rag_cache/
-├── config.yaml             # All tunable parameters
-├── .env.example            # Environment variable template
-├── requirements.txt
-├── main.py                 # API entry point (uvicorn)
-├── api.py                  # FastAPI routes
+├── api.py                      # FastAPI routes (ingest, chat, /documents, stats)
+├── main.py                     # Uvicorn entry point
+├── config.yaml                 # All tunable parameters
+├── docker-compose.yml          # Redis
 ├── src/
-│   ├── ingestion.py        # Document loading + chunking pipeline
-│   ├── pipeline.py         # Full query pipeline (cache → retrieval → LLM)
+│   ├── pipeline.py             # 3-tier cache → retrieval → LLM orchestration
+│   ├── ingestion.py            # PDF enrichment + chunking + Pinecone upsert
 │   ├── chunking/
-│   │   ├── parent_child.py          # Strategy 1
-│   │   └── structure_recursive.py  # Strategy 2
+│   │   ├── parent_child.py         # Large parents (Redis) + small children (Pinecone)
+│   │   └── structure_recursive.py  # Header-aware + recursive fallback
 │   ├── caching/
-│   │   ├── cache_manager.py    # Orchestrates all 3 tiers
-│   │   ├── exact_cache.py      # Tier 1
-│   │   ├── semantic_cache.py   # Tier 2
-│   │   ├── retrieval_cache.py  # Tier 3
-│   │   ├── parent_cache.py     # Parent chunk store
-│   │   └── redis_client.py     # Shared Redis connection
+│   │   ├── cache_manager.py        # Tier 1 / 2 / 3 orchestrator
+│   │   ├── redis_backend.py        # Redis implementation
+│   │   ├── sqlite_backend.py       # SQLite fallback
+│   │   ├── parent_cache.py         # Parent chunk store (Redis)
+│   │   └── redis_client.py
 │   ├── retrieval/
-│   │   ├── pinecone_manager.py  # Index + upsert
-│   │   ├── retriever.py         # Vector search
-│   │   └── reranker.py          # BGE reranking + parent injection
+│   │   ├── retriever.py            # Pinecone vector search
+│   │   ├── reranker.py             # BGE reranking + parent merge
+│   │   ├── parent_merger.py        # group → deduplicate → fetch parents
+│   │   └── pinecone_manager.py
 │   ├── generation/
-│   │   └── generator.py         # OpenAI GPT-4o-mini
+│   │   └── generator.py            # GPT-4o-mini answer synthesis
 │   └── utils/
-│       ├── config_loader.py     # config.yaml singleton
-│       ├── embeddings.py        # OpenAI text-embedding-3-small
-│       ├── pdf_to_markdown.py   # pymupdf4llm PDF→Markdown
-│       └── logger.py            # Centralised logging
+│       ├── embeddings.py           # OpenAI text-embedding-3-small
+│       ├── pdf_to_markdown.py      # pymupdf4llm
+│       ├── image_enricher.py       # Groq vision image descriptions
+│       └── config_loader.py
 ├── frontend/
-│   └── app.py              # Streamlit UI
-├── data/                   # Drop your documents here
-└── docs/
-    └── architecture.md
+│   └── app.py                  # Streamlit UI
+├── screenshots/
+│   ├── rag_cache.png
+│   ├── rag_cache_redis.png
+│   ├── rag_cache_swagger.png
+│   └── demo_rag_cache.mp4
+└── data/                       # Drop documents here
 ```
 
 ---
 
 ## Quick Start
 
-### 1. Clone and install
-
 ```bash
-cd enhanced_rag_cache
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Mac/Linux:
-source .venv/bin/activate
-
+# 1. Install
 pip install -r requirements.txt
-```
 
-### 2. Configure environment
+# 2. Configure
+cp .env.example .env   # fill PINECONE_API_KEY + OPENAI_API_KEY
 
-```bash
-cp .env.example .env
-# Edit .env and fill in:
-#   PINECONE_API_KEY=...
-#   OPENAI_API_KEY=...
-```
+# 3. Redis
+docker-compose up -d
 
-### 3. Start Redis
+# 4. API
+python main.py          # → http://localhost:8000/docs
 
-```bash
-# Docker (recommended):
-docker run -d -p 6379:6379 redis:7
-
-# Or install locally and run: redis-server
-```
-
-> **Note:** The app works without Redis — caching is silently disabled and all queries run through the full pipeline.
-
-### 4. Start the API
-
-```bash
-python main.py
-# API docs: http://localhost:8000/docs
-```
-
-### 5. Start the frontend (separate terminal)
-
-```bash
-cd frontend
-streamlit run app.py
-# Opens at http://localhost:8501
+# 5. UI (separate terminal)
+cd frontend && streamlit run app.py   # → http://localhost:8501
 ```
 
 ---
 
-## Configuration
+## Stack
 
-All parameters are in [config.yaml](config.yaml). Key settings:
-
-| Section | Key | Default | Description |
-|---|---|---|---|
-| `chunking.parent_child` | `parent_chunk_size` | 1500 | Parent chunk size (chars) |
-| `chunking.parent_child` | `child_chunk_size` | 300 | Child chunk size (chars) |
-| `chunking.structure_recursive` | `max_section_size` | 1200 | Max section before recursive split |
-| `cache.semantic` | `similarity_threshold` | 0.92 | Cosine similarity for Tier-2 hit |
-| `cache.retrieval` | `similarity_threshold` | 0.80 | Cosine similarity for Tier-3 hit |
-| `cache.exact` | `ttl_seconds` | 86400 | Tier-1 TTL (24 h) |
-
----
-
-## API Endpoints
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/ingest` | Ingest document by server-side file path |
-| `POST` | `/ingest/upload` | Upload + ingest a file directly |
-| `POST` | `/chat` | Query with three-tier cache |
-| `GET` | `/cache/stats` | Cache analytics |
-| `DELETE` | `/cache/clear` | Wipe all caches |
-| `GET` | `/health` | Redis + API health check |
-
-### Example: Ingest
-
-```bash
-curl -X POST http://localhost:8000/ingest \
-  -H "Content-Type: application/json" \
-  -d '{"filepath": "/absolute/path/to/doc.pdf", "strategy": "parent_child"}'
-```
-
-### Example: Chat
-
-```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What are the main findings?", "use_reranker": true}'
-```
-
----
-
-## Technology Stack
-
-| Component | Technology |
+| | |
 |---|---|
 | Vector DB | Pinecone (integrated embedding) |
-| Embeddings (cache) | OpenAI text-embedding-3-small |
+| Cache | Redis 7 · 3-tier (Exact / Semantic / Retrieval) |
 | LLM | OpenAI GPT-4o-mini |
-| Reranking | Pinecone BGE-reranker-v2-m3 |
-| Cache backend | Redis 7 |
-| PDF conversion | pymupdf4llm |
+| Embeddings | OpenAI text-embedding-3-small |
+| Reranker | Pinecone BGE-reranker-v2-m3 |
+| PDF | pymupdf4llm + Groq vision |
 | API | FastAPI + Uvicorn |
-| Frontend | Streamlit |
+| UI | Streamlit |
 
 ---
 
-## Architecture
+## API
 
-See [docs/architecture.md](docs/architecture.md) for the full system architecture, chunking strategy comparison, and query flow walkthrough.
+| Method | Endpoint | |
+|---|---|---|
+| `POST` | `/ingest` | Ingest by file path |
+| `POST` | `/ingest/upload` | Upload + ingest |
+| `GET` | `/documents` | List ingested documents |
+| `POST` | `/chat` | Query (3-tier cache aware) |
+| `GET` | `/cache/stats` | Cache analytics |
+| `DELETE` | `/cache/clear` | Wipe all caches |
+| `GET` | `/health` | Health check |
+
+---
+
+## Screenshots
+
+### UI
+![UI](screenshots/rag_cache.png)
+
+### Redis Cache
+![Redis](screenshots/rag_cache_redis.png)
+
+### Swagger
+![Swagger](screenshots/rag_cache_swagger.png)
+
+### Demo
+> 📹 [`demo_rag_cache.mp4`](screenshots/demo_rag_cache.mp4)

@@ -1,1 +1,0 @@
-2026-03-02 10:09:33,690 | INFO     | src.chunking.structure_recursive | structure_recursive_chunk: doc='test' → 3 chunks (text=1, table=1, image=1)
